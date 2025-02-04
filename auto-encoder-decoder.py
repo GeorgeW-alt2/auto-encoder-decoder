@@ -17,8 +17,8 @@ class HParams:
 
 def default_hparams():
     return HParams(
-        n_vocab=50257, n_ctx=1024, n_embd=768,
-        n_head=12, n_layer=12, n_positions=1024,
+        n_vocab=50257, n_ctx=256, n_embd=128,
+        n_head=12, n_layer=12, n_positions=256,
         batch_size=8, learning_rate=5e-5, epochs=3
     )
 
@@ -87,10 +87,16 @@ def generate_text(prompt, model, max_length=50):
     
     for _ in range(max_length):
         logits = model(input_ids)
+        logits = logits / 0.7  # Scaling the logits to control randomness
         next_token = tf.argmax(logits[:, -1, :], axis=-1)
+        
+        # Ensure both tensors are of the same type (int32)
+        input_ids = tf.cast(input_ids, tf.int32)  # Cast input_ids to int32
+        next_token = tf.cast(next_token, tf.int32)  # Cast next_token to int32
         input_ids = tf.concat([input_ids, next_token[:, None]], axis=-1)
     
     return tokenizer.decode(input_ids.numpy()[0])
+
 
 # Main Execution
 if __name__ == "__main__":
